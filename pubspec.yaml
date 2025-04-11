@@ -1,0 +1,64 @@
+name: study_room
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.7.2 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  provider: ^6.1.2
+
+  # Firebase
+  firebase_core: ^2.27.1
+  firebase_auth: ^4.17.9
+  cloud_firestore: ^4.15.9
+  firebase_storage: ^11.6.10
+  firebase_database: ^10.4.10
+  google_sign_in: ^6.2.1
+  
+  # Permissions
+  permission_handler: ^11.0.0
+  
+  # Avatar customization
+  flutter_svg: ^2.0.9
+  path_provider: ^2.1.2
+  # Direct handling of images and networking
+  http: ^1.1.0
+  image: ^4.1.3
+  
+  # 100ms Video Conferencing
+  webview_flutter: ^4.4.2
+  hmssdk_flutter: ^1.10.6  # Using version suggested by pub tool
+  
+  # Date Formatting
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  assets:
+    - Assets/google.png
+    - Assets/apple.png
+    - Assets/facebook.png
+    - Assets/100ms_web.html
+    - Assets/avatar_1.png
+    - Assets/avatar_2.png
+    - Assets/avatar_3.png
+    - Assets/avatar_4.png
+    - Assets/avatar_5.png
+    - Assets/avatar_6.png
+    - Assets/avatar_7.png
+
+  uses-material-design: true

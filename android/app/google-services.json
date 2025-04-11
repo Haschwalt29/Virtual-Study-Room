@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "882408969195",
+    "project_id": "virtual-study-room-4d8c0",
+    "storage_bucket": "virtual-study-room-4d8c0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882408969195:android:f6031cc75f363e10827fae",
+        "android_client_info": {
+          "package_name": "com.example.study_room"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "882408969195-rdeot1a49hvijt9fd462tqid066tro7u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.study_room",
+            "certificate_hash": "06ed43ce2e31e5c237955d96ccc151b585fec2c0"
+          }
+        },
+        {
+          "client_id": "882408969195-m2sth839er481tl7dkrlhsugt3u9ai0m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3jdm-FcoQlTfnkKqTXyaM-goxfKIB4Ro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "882408969195-m2sth839er481tl7dkrlhsugt3u9ai0m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "882408969195-a139v15me2qoriemvnporanounec0cdb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.studyRoom"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

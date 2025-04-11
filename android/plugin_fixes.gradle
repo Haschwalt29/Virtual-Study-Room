@@ -1,0 +1,21 @@
+// This file contains fixes for Flutter plugins that need special handling
+// Specifically for hmssdk_flutter to add missing namespace
+
+gradle.beforeProject { project ->
+    if (project.name == "hmssdk_flutter") {
+        println("Fixing hmssdk_flutter plugin settings: adding namespace")
+        
+        // Add hook for Android library plugin
+        project.pluginManager.withPlugin("com.android.library") {
+            // Set namespace for the plugin
+            // This needs to match what would be in the plugin's AndroidManifest.xml
+            project.afterEvaluate {
+                def android = project.extensions.findByName("android")
+                if (android) {
+                    // Add namespace to the extension
+                    android.namespace = "live.100ms.flutter"
+                }
+            }
+        }
+    }
+}

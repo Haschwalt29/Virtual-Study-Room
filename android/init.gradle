@@ -1,0 +1,65 @@
+/**
+ * Gradle initialization script to fix Flutter plugin namespace issues
+ * This script runs before any project evaluation
+ */
+
+initscript {
+    repositories {
+        mavenCentral()
+        google()
+    }
+}
+
+// Find the hmssdk_flutter plugin in the Pub cache and modify its build.gradle
+gradle.rootProject {
+    def pubCachePath = "${System.getProperty('user.home')}/.pub-cache"
+    if (System.getenv("PUB_CACHE") != null) {
+        pubCachePath = System.getenv("PUB_CACHE")
+    } else if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        pubCachePath = "${System.getProperty('user.home')}/AppData/Local/Pub/Cache"
+    }
+    
+    println("Looking for hmssdk_flutter plugin in: ${pubCachePath}")
+    
+    def findPluginBuildGradle = { rootDir ->
+        def foundFiles = []
+        rootDir.traverse(
+            type: groovy.io.FileType.FILES,
+            nameFilter: ~/build.gradle/,
+            maxDepth: 20
+        ) { file ->
+            if (file.path.contains("hmssdk_flutter") && file.path.contains("android")) {
+                foundFiles << file
+            }
+        }
+        return foundFiles
+    }
+    
+    def files = findPluginBuildGradle(new File(pubCachePath))
+    if (files.size() > 0) {
+        println("Found ${files.size()} hmssdk_flutter build.gradle files")
+        
+        files.each { file ->
+            println("Checking: ${file.path}")
+            
+            def content = file.text
+            if (!content.contains("namespace")) {
+                println("Adding namespace to: ${file.path}")
+                
+                // Add namespace to the android block
+                def updatedContent = content.replaceFirst(
+                    /android\s*\{/,
+                    "android {\n    namespace \"live.100ms.flutter\""
+                )
+                
+                // Write the modified content back to the file
+                file.write(updatedContent)
+                println("Successfully added namespace to: ${file.path}")
+            } else {
+                println("Namespace already exists in: ${file.path}")
+            }
+        }
+    } else {
+        println("No hmssdk_flutter build.gradle files found")
+    }
+}

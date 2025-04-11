@@ -1,0 +1,63 @@
+// This is a Gradle init script that runs during the earliest initialization phase
+// It will fix the hmssdk_flutter plugin by modifying its build.gradle file directly
+
+def hmssdk_flutter_path = "${gradle.gradleUserHomeDir}/caches/pub/hosted/pub.dev/hmssdk_flutter-0.3.0/android"
+def hmssdk_build_gradle = new File("${hmssdk_flutter_path}/build.gradle")
+
+if (hmssdk_build_gradle.exists()) {
+    println "Found hmssdk_flutter build.gradle at ${hmssdk_build_gradle.absolutePath}"
+    
+    // Read the current content
+    def content = hmssdk_build_gradle.text
+    
+    // Check if namespace is already defined
+    if (!content.contains("namespace")) {
+        println "Adding namespace to hmssdk_flutter build.gradle"
+        
+        // Modify the content to add namespace
+        def modified = content.replace(
+            "android {", 
+            "android {\n    namespace 'live.100ms.flutter'"
+        )
+        
+        // Write back the modified content
+        hmssdk_build_gradle.text = modified
+        
+        println "Successfully added namespace to hmssdk_flutter build.gradle"
+    } else {
+        println "Namespace already exists in hmssdk_flutter build.gradle"
+    }
+} else {
+    println "Could not find hmssdk_flutter build.gradle at ${hmssdk_build_gradle.absolutePath}"
+    
+    // Try to find it elsewhere in the cache
+    def cacheDir = new File(gradle.gradleUserHomeDir, "caches")
+    println "Searching for hmssdk_flutter plugin in ${cacheDir.absolutePath}"
+    
+    def files = []
+    cacheDir.eachFileRecurse { file ->
+        if (file.name == "build.gradle" && file.path.contains("hmssdk_flutter")) {
+            files << file
+        }
+    }
+    
+    if (files) {
+        println "Found ${files.size()} potential hmssdk_flutter build.gradle files:"
+        files.each { file ->
+            println "  ${file.absolutePath}"
+            
+            // Handle the first matching file
+            if (!content.contains("namespace")) {
+                def content = file.text
+                def modified = content.replace(
+                    "android {", 
+                    "android {\n    namespace 'live.100ms.flutter'"
+                )
+                file.text = modified
+                println "Added namespace to ${file.absolutePath}"
+            }
+        }
+    } else {
+        println "Could not find any hmssdk_flutter build.gradle files in cache"
+    }
+}

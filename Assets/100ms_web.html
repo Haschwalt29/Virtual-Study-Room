@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100ms Video Conference</title>
+    <style>
+        /* Theme Variables */
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333333;
+            --container-bg: #ffffff;
+            --video-container-bg: #1a1a1a;
+            --video-tile-bg: #333333;
+            --controls-bg: #ffffff;
+            --control-button-bg: #f0f0f0;
+            --join-screen-bg: #f8f8f8;
+            --button-color: #ff9800;
+            --button-hover: #f57c00;
+            --error-color: #ff4d4d;
+            --border-color: #dddddd;
+            --muted-bg: #ff4d4d;
+            --sharing-bg: #4caf50;
+        }
+        
+        /* Dark Mode Theme */
+        body.dark-mode {
+            --bg-color: #121212;
+            --text-color: #eeeeee;
+            --container-bg: #1a1a1a;
+            --video-container-bg: #000000;
+            --video-tile-bg: #1e1e1e;
+            --controls-bg: #1a1a1a;
+            --control-button-bg: #333333;
+            --join-screen-bg: #1a1a1a;
+            --button-color: #ff9800;
+            --button-hover: #f57c00;
+            --error-color: #ff5252;
+            --border-color: #333333;
+            --muted-bg: #d32f2f;
+            --sharing-bg: #388e3c;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--container-bg);
+        }
+        
+        #video-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-auto-rows: 1fr;
+            gap: 10px;
+            padding: 10px;
+            background-color: var(--video-container-bg);
+            overflow: auto;
+        }
+        
+        .video-tile {
+            position: relative;
+            background-color: var(--video-tile-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .video-tile video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-tile .name-badge {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .video-tile .mic-icon {
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+            background-color: var(--controls-bg);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .control-button {
+            margin: 0 10px;
+            padding: 10px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--control-button-bg);
+            color: var(--text-color);
+        }
+        
+        .mic-button {
+            background-color: var(--control-button-bg);
+        }
+        
+        .mic-button.muted {
+            background-color: var(--muted-bg);
+            color: white;
+        }
+        
+        .video-button {
+            background-color: var(--control-button-bg);
+        }
+        
+        .video-button.off {
+            background-color: var(--muted-bg);
+            color: white;
+        }
+        
+        .screen-button {
+            background-color: var(--control-button-bg);
+        }
+        
+        .screen-button.sharing {
+            background-color: var(--sharing-bg);
+            color: white;
+        }
+        
+        .leave-button {
+            background-color: var(--muted-bg);
+            color: white;
+        }
+        
+        #join-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background-color: var(--join-screen-bg);
+        }
+        
+        #join-button {
+            padding: 12px 24px;
+            background-color: var(--button-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        #join-button:hover {
+            background-color: var(--button-hover);
+        }
+        
+        #error-message {
+            color: var(--error-color);
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="join-screen">
+            <h2>Video Conference</h2>
+            <p>Join the video conference to collaborate with others</p>
+            <button id="join-button">Join Conference</button>
+            <p id="error-message" class="hidden"></p>
+        </div>
+        
+        <div id="conference-screen" class="hidden">
+            <div id="video-container"></div>
+            
+            <div id="controls">
+                <button class="control-button mic-button" id="mic-button">
+                    <span class="material-icons">mic</span>
+                </button>
+                <button class="control-button video-button" id="video-button">
+                    <span class="material-icons">videocam</span>
+                </button>
+                <button class="control-button screen-button" id="screen-button">
+                    <span class="material-icons">screen_share</span>
+                </button>
+                <button class="control-button leave-button" id="leave-button">
+                    <span class="material-icons">call_end</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <!-- 100ms Web SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@100mslive/hms-video@0.7.5/dist/index.js"></script>
+    
+    <script>
+        // Flutter communication
+        function sendToFlutter(action, data) {
+            if (window.flutterChannel) {
+                window.flutterChannel.postMessage(JSON.stringify({
+                    action: action,
+                    data: data
+                }));
+            }
+        }
+        
+        // 100ms SDK variables
+        let hmsClient;
+        let isAudioMuted = false;
+        let isVideoMuted = false;
+        let isScreenSharing = false;
+        let localPeer;
+        let peers = [];
+        
+        // DOM elements
+        const joinScreen = document.getElementById('join-screen');
+        const conferenceScreen = document.getElementById('conference-screen');
+        const videoContainer = document.getElementById('video-container');
+        const joinButton = document.getElementById('join-button');
+        const micButton = document.getElementById('mic-button');
+        const videoButton = document.getElementById('video-button');
+        const screenButton = document.getElementById('screen-button');
+        const leaveButton = document.getElementById('leave-button');
+        const errorMessage = document.getElementById('error-message');
+        
+        // Initialize 100ms SDK
+        async function initializeSDK(token) {
+            try {
+                // Initialize HMS client
+                hmsClient = new HMS.HMSClient();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Join the room
+                await joinRoom(token);
+                
+                return true;
+            } catch (error) {
+                console.error('Error initializing 100ms SDK:', error);
+                showError('Failed to initialize video conference: ' + error.message);
+                return false;
+            }
+        }
+        
+        // Join 100ms room
+        async function joinRoom(token) {
+            try {
+                // Get user name from token (or use default)
+                const username = 'User-' + Math.floor(Math.random() * 1000);
+                
+                // Join the room
+                await hmsClient.join({
+                    authToken: token,
+                    userName: username,
+                    settings: {
+                        isAudioMuted: false,
+                        isVideoMuted: false
+                    }
+                });
+                
+                // Show conference screen
+                joinScreen.classList.add('hidden');
+                conferenceScreen.classList.remove('hidden');
+                
+                // Notify Flutter
+                sendToFlutter('joined', { success: true });
+            } catch (error) {
+                console.error('Error joining room:', error);
+                showError('Failed to join room: ' + error.message);
+                
+                // Notify Flutter
+                sendToFlutter('joined', { success: false, error: error.message });
+            }
+        }
+        
+        // Leave 100ms room
+        async function leaveRoom() {
+            try {
+                await hmsClient.leave();
+                
+                // Show join screen
+                conferenceScreen.classList.add('hidden');
+                joinScreen.classList.remove('hidden');
+                
+                // Clear video container
+                videoContainer.innerHTML = '';
+                
+                // Reset state
+                isAudioMuted = false;
+                isVideoMuted = false;
+                isScreenSharing = false;
+                updateButtonStates();
+                
+                // Notify Flutter
+                sendToFlutter('left', { success: true });
+            } catch (error) {
+                console.error('Error leaving room:', error);
+                
+                // Notify Flutter
+                sendToFlutter('left', { success: false, error: error.message });
+            }
+        }
+        
+        // Toggle audio
+        async function toggleAudio() {
+            try {
+                if (isAudioMuted) {
+                    await hmsClient.unmuteAudio();
+                } else {
+                    await hmsClient.muteAudio();
+                }
+                
+                isAudioMuted = !isAudioMuted;
+                updateButtonStates();
+                
+                // Notify Flutter
+                sendToFlutter('audioToggled', { isEnabled: !isAudioMuted });
+            } catch (error) {
+                console.error('Error toggling audio:', error);
+            }
+        }
+        
+        // Toggle video
+        async function toggleVideo() {
+            try {
+                if (isVideoMuted) {
+                    await hmsClient.unmuteVideo();
+                } else {
+                    await hmsClient.muteVideo();
+                }
+                
+                isVideoMuted = !isVideoMuted;
+                updateButtonStates();
+                
+                // Notify Flutter
+                sendToFlutter('videoToggled', { isEnabled: !isVideoMuted });
+            } catch (error) {
+                console.error('Error toggling video:', error);
+            }
+        }
+        
+        // Toggle screen share
+        async function toggleScreenShare() {
+            try {
+                if (isScreenSharing) {
+                    await hmsClient.stopScreenShare();
+                } else {
+                    await hmsClient.startScreenShare();
+                }
+                
+                isScreenSharing = !isScreenSharing;
+                updateButtonStates();
+                
+                // Notify Flutter
+                sendToFlutter('screenShareToggled', { isSharing: isScreenSharing });
+            } catch (error) {
+                console.error('Error toggling screen share:', error);
+            }
+        }
+        
+        // Update button states
+        function updateButtonStates() {
+            // Mic button
+            if (isAudioMuted) {
+                micButton.classList.add('muted');
+                micButton.querySelector('span').textContent = 'mic_off';
+            } else {
+                micButton.classList.remove('muted');
+                micButton.querySelector('span').textContent = 'mic';
+            }
+            
+            // Video button
+            if (isVideoMuted) {
+                videoButton.classList.add('off');
+                videoButton.querySelector('span').textContent = 'videocam_off';
+            } else {
+                videoButton.classList.remove('off');
+                videoButton.querySelector('span').textContent = 'videocam';
+            }
+            
+            // Screen share button
+            if (isScreenSharing) {
+                screenButton.classList.add('sharing');
+                screenButton.querySelector('span').textContent = 'stop_screen_share';
+            } else {
+                screenButton.classList.remove('sharing');
+                screenButton.querySelector('span').textContent = 'screen_share';
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.textContent = '';
+            errorMessage.classList.add('hidden');
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Join button
+            joinButton.addEventListener('click', () => {
+                // This will be triggered from Flutter
+                sendToFlutter('joinRequested', {});
+            });
+            
+            // Control buttons
+            micButton.addEventListener('click', toggleAudio);
+            videoButton.addEventListener('click', toggleVideo);
+            screenButton.addEventListener('click', toggleScreenShare);
+            leaveButton.addEventListener('click', leaveRoom);
+            
+            // 100ms SDK events
+            hmsClient.on('peer-join', (peer) => {
+                console.log('Peer joined:', peer);
+                peers.push(peer);
+                renderPeers();
+                
+                // Notify Flutter
+                sendToFlutter('peerJoined', { peerId: peer.id, name: peer.name });
+            });
+            
+            hmsClient.on('peer-leave', (peer) => {
+                console.log('Peer left:', peer);
+                peers = peers.filter(p => p.id !== peer.id);
+                renderPeers();
+                
+                // Notify Flutter
+                sendToFlutter('peerLeft', { peerId: peer.id, name: peer.name });
+            });
+            
+            hmsClient.on('track-add', (track, peer) => {
+                console.log('Track added:', track, peer);
+                renderPeers();
+            });
+            
+            hmsClient.on('track-remove', (track, peer) => {
+                console.log('Track removed:', track, peer);
+                renderPeers();
+            });
+            
+            hmsClient.on('error', (error) => {
+                console.error('HMS error:', error);
+                showError('Error: ' + error.message);
+                
+                // Notify Flutter
+                sendToFlutter('error', { message: error.message });
+            });
+        }
+        
+        // Render peers
+        function renderPeers() {
+            // Clear video container
+            videoContainer.innerHTML = '';
+            
+            // Render each peer
+            for (const peer of peers) {
+                const videoTile = document.createElement('div');
+                videoTile.className = 'video-tile';
+                
+                // Create video element if peer has video track
+                if (peer.videoTrack) {
+                    const video = document.createElement('video');
+                    video.autoplay = true;
+                    video.muted = peer.isLocal; // Mute local video
+                    video.playsInline = true;
+                    
+                    // Attach video track
+                    hmsClient.attachVideo(peer.videoTrack, video);
+                    
+                    videoTile.appendChild(video);
+                } else {
+                    // Display initials if no video
+                    const initials = document.createElement('div');
+                    initials.style.width = '100%';
+                    initials.style.height = '100%';
+                    initials.style.display = 'flex';
+                    initials.style.alignItems = 'center';
+                    initials.style.justifyContent = 'center';
+                    initials.style.backgroundColor = getRandomColor(peer.id);
+                    initials.style.color = 'white';
+                    initials.style.fontSize = '32px';
+                    initials.style.fontWeight = 'bold';
+                    
+                    // Get initials from name
+                    const nameInitials = peer.name
+                        .split(' ')
+                        .map(part => part.charAt(0))
+                        .join('')
+                        .toUpperCase();
+                    
+                    initials.textContent = nameInitials;
+                    
+                    videoTile.appendChild(initials);
+                }
+                
+                // Add name badge
+                const nameBadge = document.createElement('div');
+                nameBadge.className = 'name-badge';
+                
+                // Add mic icon
+                const micIcon = document.createElement('span');
+                micIcon.className = 'material-icons mic-icon';
+                micIcon.textContent = peer.audioTrack && !peer.audioTrack.isMuted ? 'mic' : 'mic_off';
+                nameBadge.appendChild(micIcon);
+                
+                // Add name
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = peer.name;
+                nameBadge.appendChild(nameSpan);
+                
+                videoTile.appendChild(nameBadge);
+                
+                // Add to container
+                videoContainer.appendChild(videoTile);
+            }
+        }
+        
+        // Get random color based on ID
+        function getRandomColor(id) {
+            // Generate a deterministic color based on the peer ID
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) {
+                hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const hue = Math.abs(hash % 360);
+            return `hsl(${hue}, 70%, 40%)`;
+        }
+        
+        // Handle messages from Flutter
+        window.handleFlutterMessage = function(message) {
+            try {
+                const data = JSON.parse(message);
+                
+                switch (data.action) {
+                    case 'initialize':
+                        initializeSDK(data.token);
+                        break;
+                    case 'join':
+                        joinRoom(data.token);
+                        break;
+                    case 'leave':
+                        leaveRoom();
+                        break;
+                    case 'toggleAudio':
+                        toggleAudio();
+                        break;
+                    case 'toggleVideo':
+                        toggleVideo();
+                        break;
+                    case 'toggleScreenShare':
+                        toggleScreenShare();
+                        break;
+                    case 'updateTheme':
+                        updateTheme(data.isDarkMode);
+                        break;
+                    default:
+                        console.warn('Unknown action:', data.action);
+                }
+            } catch (error) {
+                console.error('Error handling Flutter message:', error);
+            }
+        };
+        
+        // Function to toggle dark mode
+        function updateTheme(isDarkMode) {
+            console.log("Updating theme, dark mode:", isDarkMode);
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+    </script>
+</body>
+</html>
