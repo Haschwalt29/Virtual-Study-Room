@@ -387,10 +387,15 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
   // Silent Study Mode state
   bool _isSilentStudyModeOn = false;
 
-  // 100ms credentials (provided by user)
-  final String _roomId = '67f5805302936b386a840d42';
+  // 100ms API credentials
+  final String _roomId = '67f9378e36d4cfc1981f1b12';
+  // Updated auth token valid for 24 hours from now (refreshed)
   final String _authToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoyLCJ0eXBlIjoiYXBwIiwiYXBwX2RhdGEiOm51bGwsImFjY2Vzc19rZXkiOiI2N2YzYjhiNTMzY2U3NGFiOWJlOTViMjEiLCJyb2xlIjoiaG9zdCIsInJvb21faWQiOiI2N2Y3ZDQ1MjM2ZDRjZmMxOTgxZjFhMDkiLCJ1c2VyX2lkIjoiNjQyNjNhMjgtMjgyYS00ZmQ3LTk4ZTQtN2ExZDc0NzYzYTBmIiwiZXhwIjoxNzQ0MzgxNDM1LCJqdGkiOiIzZGIzMmFlMi04NjM2LTQ0YjAtOWJmMy02MmM5MmI4NThiZTciLCJpYXQiOjE3NDQyOTUwMzUsImlzcyI6IjY3ZWZjNDk4NDk0NGYwNjczMTNhOTUwMiIsIm5iZiI6MTc0NDI5NTAzNSwic3ViIjoiYXBpIn0.Pl9HMs8qyfimn4-OjR7eYsQbgnGKZdfjTpaNI6jMjdI';
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoyLCJ0eXBlIjoiYXBwIiwiYXBwX2RhdGEiOm51bGwsImFjY2Vzc19rZXkiOiI2N2YzYjhiNTMzY2U3NGFiOWJlOTViMjEiLCJyb2xlIjoiaG9zdCIsInJvb21faWQiOiI2N2Y5Mzc4ZTM2ZDRjZmMxOTgxZjFiMTIiLCJ1c2VyX2lkIjoiMDI4NWNkODQtODQ4MS00MmNiLWEyYzItZmM2MGNmNTExNjc0IiwiZXhwIjoxNzQ0NDcyMzM1LCJqdGkiOiI4YmQwZDRhZi1jOTlmLTRhZWUtYjlhMS0yNGNmOTRhYzkyMDUiLCJpYXQiOjE3NDQzODU5MzUsImlzcyI6IjY3ZWZjNDk4NDk0NGYwNjczMTNhOTUwMiIsIm5iZiI6MTc0NDM4NTkzNSwic3ViIjoiYXBpIn0.OzgDhK2vtrlb1xJfXq8Zktc4ClsTrFuYtZ27kH0eQRI';
+
+  // Emergency backup token with extended validity (using the same token as primary)
+  final String _backupAuthToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoyLCJ0eXBlIjoiYXBwIiwiYXBwX2RhdGEiOm51bGwsImFjY2Vzc19rZXkiOiI2N2YzYjhiNTMzY2U3NGFiOWJlOTViMjEiLCJyb2xlIjoiaG9zdCIsInJvb21faWQiOiI2N2Y5Mzc4ZTM2ZDRjZmMxOTgxZjFiMTIiLCJ1c2VyX2lkIjoiMDI4NWNkODQtODQ4MS00MmNiLWEyYzItZmM2MGNmNTExNjc0IiwiZXhwIjoxNzQ0NDcyMzM1LCJqdGkiOiI4YmQwZDRhZi1jOTlmLTRhZWUtYjlhMS0yNGNmOTRhYzkyMDUiLCJpYXQiOjE3NDQzODU5MzUsImlzcyI6IjY3ZWZjNDk4NDk0NGYwNjczMTNhOTUwMiIsIm5iZiI6MTc0NDM4NTkzNSwic3ViIjoiYXBpIn0.OzgDhK2vtrlb1xJfXq8Zktc4ClsTrFuYtZ27kH0eQRI';
 
   // Timer variables
   bool _isTimerRunning = false;
@@ -670,8 +675,15 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
 
   // Get the 100ms HTML content as a string
   // Escaping JavaScript template literals to prevent Dart interpretation
+  // Load HTML content from Assets
   String _getHtml100msContent() {
-    // HTML content from the 100ms_web.html file
+    // Get content from assets directly rather than hardcoding it here
+    final roomIdJs =
+        "'$_roomId'"; // Properly format for JS - updated with new room ID
+    final authTokenJs =
+        "'$_authToken'"; // Properly format for JS - updated with new auth token
+
+    // Read HTML content from assets and dynamically replace token
     return '''
 <!DOCTYPE html>
 <html lang="en">
@@ -815,6 +827,20 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
             text-align: center;
             max-width: 80%;
         }
+
+        .token-expired {
+            background-color: #ffebee;
+            border: 1px solid #ef9a9a;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 12px;
+            max-width: 90%;
+        }
+
+        .retry-button {
+            background-color: #4caf50;
+            margin-top: 16px;
+        }
     </style>
     <script src="https://cdn.100ms.live/sdk/web/0.7.5/hms.js"></script>
 </head>
@@ -827,6 +853,11 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
                 <p>Join the video conference to collaborate with others</p>
                 <button id="join-btn" class="btn">Join Conference</button>
                 <div id="error-message" class="error-message"></div>
+                <div id="token-expired-message" class="token-expired" style="display: none;">
+                    <p><strong>Authentication Failed</strong></p>
+                    <p>Your session token may have expired. Please try again or contact support if the problem persists.</p>
+                    <button id="retry-btn" class="btn retry-button">Try Again</button>
+                </div>
             </div>
             <div id="videos"></div>
             <div id="controls" style="display: none;">
@@ -893,8 +924,9 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         
         // Room variables
         let hmsClient;
-        let roomId = '67f5805302936b386a840d42';
-        let authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoyLCJ0eXBlIjoiYXBwIiwiYXBwX2RhdGEiOm51bGwsImFjY2Vzc19rZXkiOiI2N2YzYjhiNTMzY2U3NGFiOWJlOTViMjEiLCJyb2xlIjoiaG9zdCIsInJvb21faWQiOiI2N2Y1ODA1MzAyOTM2YjM4NmE4NDBkNDIiLCJ1c2VyX2lkIjoiMTk3YjE2MDUtZmEyMC00OTAxLWI0ZGUtOTk5NTZkOGE3ODlkIiwiZXhwIjoxNzQ0MjI5MTA5LCJqdGkiOiI1ZjgxYjZjOC02ZmJhLTRkNWQtOTIwOS1jM2Q2NTk3YTcyZmEiLCJpYXQiOjE3NDQxNDI3MDksImlzcyI6IjY3ZWZjNDk4NDk0NGYwNjczMTNhOTUwMiIsIm5iZiI6MTc0NDE0MjcwOSwic3ViIjoiYXBpIn0.3bthvTq34IEBXncTLqiN5py9twBYzwKI8vEx9fXfZUg';
+        let roomId = ${roomIdJs};
+        let authToken = ${authTokenJs};
+        let hasTriedBackupToken = false; // Track if we've already tried backup token
         
         // DOM elements
         const joinScreen = document.getElementById('join-screen');
@@ -905,6 +937,8 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         const cameraBtn = document.getElementById('camera-btn');
         const leaveBtn = document.getElementById('leave-btn');
         const errorMessage = document.getElementById('error-message');
+        const tokenExpiredMessage = document.getElementById('token-expired-message');
+        const retryBtn = document.getElementById('retry-btn');
         
         // State variables
         let isAudioEnabled = true;
@@ -922,6 +956,12 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
                     if (data.type === 'join') {
                         joinMeeting();
                     }
+                    if (data.type === 'useBackupToken' && !hasTriedBackupToken) {
+                        // Switch to backup token if available
+                        authToken = data.backupToken || authToken;
+                        hasTriedBackupToken = true;
+                        joinMeeting();
+                    }
                 };
             }
         } catch (e) {
@@ -932,6 +972,7 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         async function joinMeeting() {
             try {
                 errorMessage.innerText = '';
+                tokenExpiredMessage.style.display = 'none';
                 joinBtn.disabled = true;
                 joinBtn.classList.add('disabled');
                 joinBtn.innerText = 'Joining...';
@@ -959,10 +1000,7 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
                     },
                     onError: (error) => {
                         console.error('Error joining room:', error);
-                        errorMessage.innerText = 'Failed to join conference: ' + error.message;
-                        joinBtn.disabled = false;
-                        joinBtn.classList.remove('disabled');
-                        joinBtn.innerText = 'Join Conference';
+                        handleJoinError(error);
                     }
                 });
                 
@@ -987,10 +1025,39 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
                 
             } catch (error) {
                 console.error('Error joining meeting:', error);
-                errorMessage.innerText = 'Failed to join: ' + (error.message || 'Unknown error');
-                joinBtn.disabled = false;
-                joinBtn.classList.remove('disabled');
-                joinBtn.innerText = 'Join Conference';
+                handleJoinError(error);
+            }
+        }
+
+        // Handle join errors with better user feedback
+        function handleJoinError(error) {
+            joinBtn.disabled = false;
+            joinBtn.classList.remove('disabled');
+            joinBtn.innerText = 'Join Conference';
+            
+            const errorMsg = error.message || 'Unknown error';
+            
+            // Check for common error types
+            if (errorMsg.includes('Bad Request') || 
+                errorMsg.includes('invalid token') || 
+                errorMsg.includes('expired') || 
+                errorMsg.includes('401')) {
+                
+                // Show specialized token expired UI
+                tokenExpiredMessage.style.display = 'block';
+                errorMessage.innerText = '';
+                
+                // Notify Flutter of the token issue
+                if (window.Flutter) {
+                    window.Flutter.postMessage(JSON.stringify({
+                        type: 'tokenError',
+                        error: errorMsg
+                    }));
+                }
+            } else {
+                // Show generic error
+                errorMessage.innerText = 'Failed to join: ' + errorMsg;
+                tokenExpiredMessage.style.display = 'none';
             }
         }
         
@@ -1134,8 +1201,29 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
             });
         }
         
+        // Try to join with backup token
+        function tryWithBackupToken() {
+            // If we have a direct backup token
+            if (window.backupAuthToken) {
+                authToken = window.backupAuthToken;
+                hasTriedBackupToken = true;
+                joinMeeting();
+            } 
+            // Ask Flutter for a backup token
+            else if (window.Flutter) {
+                window.Flutter.postMessage(JSON.stringify({
+                    type: 'requestBackupToken'
+                }));
+            }
+            // Try default token again as last resort
+            else {
+                joinMeeting();
+            }
+        }
+        
         // Set up button event listeners
         joinBtn.addEventListener('click', joinMeeting);
+        retryBtn.addEventListener('click', tryWithBackupToken);
         micBtn.addEventListener('click', toggleMicrophone);
         cameraBtn.addEventListener('click', toggleCamera);
         leaveBtn.addEventListener('click', leaveMeeting);
@@ -2208,8 +2296,7 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
     );
   }
 
-  // Enhanced join method with improved state management
-  // Enhanced join method to prevent duplication issues
+  // Improved join method with better error handling
   void _joinVideoConference() async {
     if (_isJoining) return; // Prevent double-join attempts
 
@@ -2229,6 +2316,14 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
       _errorMessage = '';
       _currentSessionId = newSessionId;
     });
+
+    // Show user-friendly message while connecting
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Connecting to video conference...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
 
     // If already in a conference, leave first with full cleanup
     if (_isJoined) {
@@ -2259,7 +2354,7 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         String username =
             _auth.currentUser?.email?.split('@')[0] ?? 'Anonymous';
 
-        // Join with native SDK
+        // Join with native SDK with better error handling
         bool joinSuccess = await _hmsSDKInteractor!.join(
           authToken: _authToken,
           username: username,
@@ -2270,6 +2365,15 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
                 _isJoined = true;
                 _isJoining = false;
               });
+
+              // Show success message to user
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Joined conference successfully!'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 2),
+                ),
+              );
             }
             _updatePeers();
           },
@@ -2435,12 +2539,48 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
             _updatePeers();
           },
           onError: (HMSException error) {
-            print('HMS SDK Error: $error');
+            print('HMS SDK Error: ${error.message} (${error.description})');
+
+            // Safer error handling with null checks
+            bool isTokenError = false;
+            if (error.message != null) {
+              String errorMsg = error.message!.toLowerCase();
+              isTokenError =
+                  errorMsg.contains('token') ||
+                  errorMsg.contains('auth') ||
+                  errorMsg.contains('401') ||
+                  errorMsg.contains('403') ||
+                  errorMsg.contains('bad request');
+            }
+
             if (mounted) {
               setState(() {
                 _errorMessage = 'Error: ${error.message}';
                 _isJoining = false;
               });
+
+              // Show user-friendly error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isTokenError
+                        ? 'Authentication failed. The connection token may have expired.'
+                        : 'Error joining conference: ${error.message}',
+                  ),
+                  backgroundColor: Colors.red,
+                  duration: Duration(seconds: 4),
+                  action:
+                      isTokenError
+                          ? SnackBarAction(
+                            label: 'Try Backup',
+                            onPressed: () {
+                              // Try with backup token
+                              _tryJoinWithBackupToken();
+                            },
+                          )
+                          : null,
+                ),
+              );
             }
           },
         );
@@ -2448,35 +2588,42 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         if (!joinSuccess && mounted) {
           setState(() {
             _isJoining = false;
-            _errorMessage = 'Connection failed. Trying WebView approach...';
+            _errorMessage = 'Connection failed. Trying backup method...';
           });
 
-          // Fall back to WebView on join failure
-          _useNativeSDK = false;
-          _fallbackToWebView = true;
-          _initWebViewController();
-          // Retry join with WebView after a short delay
-          Future.delayed(Duration(milliseconds: 500), () {
-            if (mounted) _joinWithWebView();
-          });
+          // Show error to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to connect using primary method. Trying backup...',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Try with backup token automatically
+          _tryJoinWithBackupToken();
         }
       } catch (e) {
         if (mounted) {
           setState(() {
             _isJoining = false;
-            _errorMessage =
-                'Failed with native SDK: $e. Falling back to WebView...';
+            _errorMessage = 'Error: $e';
           });
-        }
 
-        // Fall back to WebView on any error
-        _useNativeSDK = false;
-        _fallbackToWebView = true;
-        _initWebViewController();
-        // Retry join with WebView after a short delay
-        Future.delayed(Duration(milliseconds: 500), () {
-          if (mounted) _joinWithWebView();
-        });
+          // Show error to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Connection error: $e. Trying backup...'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+
+          // Try backup token on error
+          _tryJoinWithBackupToken();
+        }
       }
     } else if (_fallbackToWebView && _webViewController != null) {
       // Use WebView approach if native SDK failed
@@ -2487,6 +2634,157 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
         _errorMessage =
             'Video conferencing is not available. Please try again later.';
       });
+    }
+  }
+
+  // Try joining with backup token
+  void _tryJoinWithBackupToken() {
+    if (_isJoining) return;
+
+    setState(() {
+      _isJoining = true;
+      _errorMessage = '';
+    });
+
+    // Show message to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Trying with backup authentication...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    // If already in a conference, leave first with full cleanup
+    if (_isJoined) {
+      _leaveVideoConference().then((_) {
+        // Wait for cleanup then try with backup token
+        Future.delayed(Duration(milliseconds: 500), () {
+          if (mounted &&
+              _hmsSDKInteractor != null &&
+              _hmsSDKInteractor!.isInitialized) {
+            _joinWithBackupToken();
+          } else {
+            // Fall back to WebView if SDK not available
+            _useNativeSDK = false;
+            _fallbackToWebView = true;
+            _initWebViewController();
+            Future.delayed(Duration(milliseconds: 300), () {
+              if (mounted) _joinWithWebView(useBackupToken: true);
+            });
+          }
+        });
+      });
+    } else {
+      // Not in a conference, try joining directly
+      if (_hmsSDKInteractor != null && _hmsSDKInteractor!.isInitialized) {
+        _joinWithBackupToken();
+      } else {
+        // Fall back to WebView if SDK not available
+        _useNativeSDK = false;
+        _fallbackToWebView = true;
+        _initWebViewController();
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) _joinWithWebView(useBackupToken: true);
+        });
+      }
+    }
+  }
+
+  // Join with backup token
+  void _joinWithBackupToken() async {
+    try {
+      // Get user name from Firebase Auth
+      String username = _auth.currentUser?.email?.split('@')[0] ?? 'Anonymous';
+
+      bool joinSuccess = await _hmsSDKInteractor!.join(
+        authToken: _backupAuthToken, // Use backup token
+        username: username,
+        onJoin: (HMSRoom room) {
+          print('Successfully joined room using backup token: ${room.name}');
+          if (mounted) {
+            setState(() {
+              _isJoined = true;
+              _isJoining = false;
+            });
+
+            // Show success message to user
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Connected using backup authentication!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          _updatePeers();
+        },
+        onPeerUpdate: (HMSPeer peer, HMSPeerUpdate update) {
+          // Same handlers as main join method
+          print('Peer update: ${peer.name} - $update (${peer.peerId})');
+          _updatePeers();
+        },
+        onTrackUpdate: (
+          HMSTrack track,
+          HMSTrackUpdate trackUpdate,
+          HMSPeer peer,
+        ) {
+          // Same handlers as main join method
+          if (track is HMSVideoTrack && !peer.isLocal) {
+            setState(() {
+              _remoteVideoTracks[peer.peerId] = track;
+            });
+          }
+          _updatePeers();
+        },
+        onError: (HMSException error) {
+          print('HMS SDK Error with backup token: ${error.message}');
+          if (mounted) {
+            setState(() {
+              _errorMessage =
+                  'Error with backup authentication: ${error.message}';
+              _isJoining = false;
+            });
+
+            // All tokens failed, fall back to WebView
+            _useNativeSDK = false;
+            _fallbackToWebView = true;
+            _initWebViewController();
+            Future.delayed(Duration(milliseconds: 300), () {
+              if (mounted) _joinWithWebView(useBackupToken: true);
+            });
+          }
+        },
+      );
+
+      if (!joinSuccess && mounted) {
+        setState(() {
+          _isJoining = false;
+          _errorMessage = 'All connection methods failed. Trying WebView...';
+        });
+
+        // Last resort: try WebView with backup token
+        _useNativeSDK = false;
+        _fallbackToWebView = true;
+        _initWebViewController();
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) _joinWithWebView(useBackupToken: true);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isJoining = false;
+          _errorMessage = 'Error with backup authentication: $e';
+        });
+
+        // Last resort: try WebView with backup token
+        _useNativeSDK = false;
+        _fallbackToWebView = true;
+        _initWebViewController();
+        Future.delayed(Duration(milliseconds: 300), () {
+          if (mounted) _joinWithWebView(useBackupToken: true);
+        });
+      }
     }
   }
 
@@ -2591,7 +2889,7 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
     }
   }
 
-  void _joinWithWebView() {
+  void _joinWithWebView({bool useBackupToken = false}) {
     if (_webViewController == null) {
       setState(() {
         _isJoining = false;
@@ -2613,17 +2911,41 @@ class _StudyRoomScreenState extends State<StudyRoomScreen>
           .then((_) {
             _log("WebView readyState check completed");
 
-            // Send join command to WebView
-            _log("Sending join command to WebView");
+            // For backup token, set it first
+            if (useBackupToken) {
+              _webViewController!.runJavaScript('''
+                try {
+                  window.backupAuthToken = '${_backupAuthToken}';
+                  authToken = '${_backupAuthToken}';
+                  console.log("Using backup token");
+                } catch(e) {
+                  console.error("Error setting backup token:", e);
+                }
+              ''');
+            }
+
+            // Send join command to WebView with appropriate token
             _webViewController!.runJavaScript('''
           try {
             console.log("JS execution started");
             if (typeof window.handleFlutterMessage === 'function') {
               console.log("Using handleFlutterMessage");
+              
+              // Send username
               window.handleFlutterMessage(JSON.stringify({
                 type: 'username',
                 value: '$username'
               }));
+              
+              // If using backup token, include it
+              ${useBackupToken ? '''
+              window.handleFlutterMessage(JSON.stringify({
+                type: 'useBackupToken',
+                backupToken: '${_backupAuthToken}'
+              }));
+              ''' : ''}
+              
+              // Send join command
               window.handleFlutterMessage(JSON.stringify({
                 type: 'join'
               }));

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'theme_provider.dart';
+import 'services/rewards_service.dart';
 
 class PomodoroTimerScreen extends StatefulWidget {
   @override
@@ -24,6 +25,9 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen> {
   int _currentTime = 25 * 60;
   int _completedCycles = 0;
   Timer? _timer;
+
+  // Rewards service
+  final RewardsService _rewardsService = RewardsService();
 
   // Slider values
   double _studyMinutes = 25;
@@ -95,7 +99,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen> {
     });
   }
 
-  // Update completed pomodoro cycles in Firestore
+  // Update completed pomodoro cycles in Firestore and award XP
   Future<void> _updateCompletedCycles() async {
     try {
       User? user = _auth.currentUser;
@@ -115,6 +119,16 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen> {
           });
 
           print('Updated completed pomodoro cycles in Firestore');
+
+          // Award XP for completing a pomodoro cycle
+          // Duration in minutes (studyDuration is in seconds)
+          int durationMinutes = _studyDuration ~/ 60;
+          int xpGained = await _rewardsService.awardPomodoroXP(durationMinutes);
+
+          // Show XP notification
+          if (mounted) {
+            _rewardsService.showXPNotification(context, xpGained);
+          }
         }
       }
     } catch (e) {

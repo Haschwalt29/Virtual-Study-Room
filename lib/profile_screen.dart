@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'avatar_customization_screen.dart';
+import 'services/rewards_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -17,6 +18,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // User data
   Map<String, dynamic> _userData = {};
   bool _isLoading = true;
+
+  // Rewards data
+  int _userXP = 0;
+  int _userLevel = 0;
+  double _levelProgress = 0.0;
+  int _nextLevelXP = 100;
+  List<BadgeInfo> _userBadges = [];
+
+  // Rewards service
+  final RewardsService _rewardsService = RewardsService();
 
   bool _isEditing = false;
   late TextEditingController _nameController;
@@ -44,6 +55,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _universityController = TextEditingController();
     _yearController = TextEditingController();
     _loadUserData();
+    _loadUserRewards();
+  }
+
+  // Load user XP, level and badges
+  Future<void> _loadUserRewards() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        // Get XP and level info
+        Map<String, dynamic> xpData = await _rewardsService.getUserXPAndLevel(
+          user.uid,
+        );
+
+        // Get badges
+        List<BadgeInfo> badges = await _rewardsService.getUserBadges(user.uid);
+
+        setState(() {
+          _userXP = xpData['xp'];
+          _userLevel = xpData['level'];
+          _levelProgress = xpData['progress'];
+          _nextLevelXP = xpData['nextLevelXP'];
+          _userBadges = badges;
+        });
+      }
+    } catch (e) {
+      print('Error loading user rewards: $e');
+    }
   }
 
   @override
@@ -760,6 +798,198 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _userData['roomsJoined']?.toString() ?? '0',
                     isDarkMode,
                   ),
+                  _buildInfoRow(
+                    "Current Streak",
+                    _userData['currentStreak']?.toString() ?? '0',
+                    isDarkMode,
+                  ),
+                  _buildInfoRow(
+                    "Completed Pomodoro Cycles",
+                    _userData['completedPomodoroCycles']?.toString() ?? '0',
+                    isDarkMode,
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            // XP and Level section
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 5,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "XP & Level",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.titleLarge?.color,
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.deepOrange.shade700,
+                              Colors.orange.shade500,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          "Level $_userLevel",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  // XP progress bar
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "$_userXP XP",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepOrange,
+                            ),
+                          ),
+                          Text(
+                            "$_nextLevelXP XP for next level",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: _levelProgress,
+                          minHeight: 10,
+                          backgroundColor:
+                              isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.orangeAccent,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 16),
+
+            // Badges section
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 5,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Badges & Achievements",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
+                  _userBadges.isEmpty
+                      ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.emoji_events_outlined,
+                                size: 48,
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[600]
+                                        : Colors.grey[400],
+                              ),
+                              SizedBox(height: 12),
+                              Text(
+                                "Complete tasks, goals, and pomodoro cycles to earn badges!",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      : GridView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
+                        itemCount: _userBadges.length,
+                        itemBuilder: (context, index) {
+                          final badge = _userBadges[index];
+                          return _buildBadgeItem(badge, isDarkMode);
+                        },
+                      ),
                 ],
               ),
             ),
@@ -767,6 +997,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildBadgeItem(BadgeInfo badge, bool isDarkMode) {
+    return GestureDetector(
+      onTap: () => _showBadgeDetails(badge),
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 3,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Image.asset(
+                    badge.iconPath,
+                    errorBuilder:
+                        (context, error, stackTrace) => Icon(
+                          Icons.emoji_events,
+                          size: 32,
+                          color: Colors.amber,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            badge.name,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBadgeDetails(BadgeInfo badge) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(badge.name),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 100,
+                  width: 100,
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Image.asset(
+                    badge.iconPath,
+                    errorBuilder:
+                        (context, error, stackTrace) => Icon(
+                          Icons.emoji_events,
+                          size: 48,
+                          color: Colors.amber,
+                        ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(badge.description, textAlign: TextAlign.center),
+                SizedBox(height: 8),
+                Text(
+                  "Earned on: ${_formatBadgeDate(badge.dateEarned)}",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Close"),
+              ),
+            ],
+          ),
+    );
+  }
+
+  String _formatBadgeDate(DateTime date) {
+    return "${date.day}/${date.month}/${date.year}";
   }
 
   Widget _buildInfoRow(String label, String value, bool isDarkMode) {

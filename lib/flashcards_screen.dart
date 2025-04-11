@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:math';
 import 'theme_provider.dart';
 import 'flashcard_quiz_screen.dart';
+import 'ai_flashcard_generator_screen.dart';
 
 class FlashcardsScreen extends StatefulWidget {
   @override
@@ -1177,6 +1178,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen>
                 Row(
                   children: [
                     Expanded(
+                      flex: 3,
                       child: ElevatedButton.icon(
                         icon: Icon(Icons.add, size: 18),
                         label: Text("New Flashcard"),
@@ -1188,11 +1190,34 @@ class _FlashcardsScreenState extends State<FlashcardsScreen>
                         onPressed: _showAddFlashcardDialog,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    SizedBox(width: 8),
                     Expanded(
+                      flex: 3,
+                      child: ElevatedButton.icon(
+                        icon: Icon(Icons.auto_awesome, size: 18),
+                        label: Text("AI Generator"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.green.shade700,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => AIFlashcardGeneratorScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
                       child: ElevatedButton.icon(
                         icon: Icon(Icons.quiz, size: 18),
-                        label: Text("Quiz Mode"),
+                        label: Text("Quiz"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.indigo.shade700,

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'theme_provider.dart';
+import 'services/rewards_service.dart';
 
 class TaskListScreen extends StatefulWidget {
   @override
@@ -14,6 +15,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Rewards service
+  final RewardsService _rewardsService = RewardsService();
 
   // Controller for new task input
   final TextEditingController _taskController = TextEditingController();
@@ -150,9 +154,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
   // Toggle task completion status
   Future<void> _toggleTaskStatus(String taskId, bool currentStatus) async {
     try {
+      bool newStatus = !currentStatus;
+
       await _firestore.collection('tasks').doc(taskId).update({
-        'isCompleted': !currentStatus,
+        'isCompleted': newStatus,
       });
+
+      // If task is being marked as complete, award XP
+      if (newStatus) {
+        int xpGained = await _rewardsService.awardTaskCompletionXP();
+        // Show XP notification
+        _rewardsService.showXPNotification(context, xpGained);
+      }
 
       // Tasks will update automatically via listener
     } catch (e) {

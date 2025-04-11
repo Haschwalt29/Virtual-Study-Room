@@ -1,0 +1,19 @@
+This directory contains badge icons for the rewards system.
+
+The following badges are used in the app:
+- pomodoro_novice.png - Complete 5 pomodoro cycles
+- pomodoro_master.png - Complete 25 pomodoro cycles
+- pomodoro_expert.png - Complete 100 pomodoro cycles
+- task_starter.png - Complete 10 tasks
+- task_achiever.png - Complete 50 tasks
+- goal_setter.png - Complete 5 daily study goals
+- goal_crusher.png - Complete 20 daily study goals
+- study_beginner.png - Accumulate 5 hours of study time
+- study_pro.png - Accumulate 25 hours of study time
+- study_champion.png - Accumulate 100 hours of study time
+- consistent_bronze.png - Maintain a 3-day study streak
+- consistent_silver.png - Maintain a 7-day study streak
+- consistent_gold.png - Maintain a 14-day study streak
+- consistent_diamond.png - Maintain a 30-day study streak
+
+Note: If badge images are not found, the app will display a default icon as a fallback.

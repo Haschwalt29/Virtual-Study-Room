@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'theme_provider.dart';
+import 'services/rewards_service.dart';
 
 class DailyStudyGoalsScreen extends StatefulWidget {
   @override
@@ -14,6 +15,9 @@ class _DailyStudyGoalsScreenState extends State<DailyStudyGoalsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Rewards service
+  final RewardsService _rewardsService = RewardsService();
 
   // Controllers for new goal input
   final TextEditingController _goalController = TextEditingController();
@@ -272,9 +276,15 @@ class _DailyStudyGoalsScreenState extends State<DailyStudyGoalsScreen> {
         if (newStatus) 'completedAt': FieldValue.serverTimestamp(),
       });
 
-      // If marking as complete, update streak
+      // If marking as complete, update streak and award XP
       if (newStatus) {
         await _updateStreak(userId);
+
+        // Award XP for completing a daily goal
+        int xpGained = await _rewardsService.awardDailyGoalXP();
+
+        // Show XP notification
+        _rewardsService.showXPNotification(context, xpGained);
       }
     } catch (e) {
       print('Error updating goal: $e');
@@ -306,13 +316,14 @@ class _DailyStudyGoalsScreenState extends State<DailyStudyGoalsScreen> {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
+      int newStreak = 1; // Default to 1 for first time or reset
+      bool streakIncreased = false;
+
       // If this is the first time updating streak or last update was before today
       if (lastStreakUpdate == null) {
         // First time ever completing a goal
-        await _firestore.collection('users').doc(userId).update({
-          'currentStreak': 1,
-          'lastStreakUpdate': FieldValue.serverTimestamp(),
-        });
+        newStreak = 1;
+        streakIncreased = true;
       } else {
         final lastUpdateDate = lastStreakUpdate.toDate();
         final lastUpdateDay = DateTime(
@@ -330,24 +341,29 @@ class _DailyStudyGoalsScreenState extends State<DailyStudyGoalsScreen> {
 
           if (lastUpdateWasYesterday) {
             // Continuing streak from yesterday
-            await _firestore.collection('users').doc(userId).update({
-              'currentStreak': currentStreak + 1,
-              'lastStreakUpdate': FieldValue.serverTimestamp(),
-            });
+            newStreak = currentStreak + 1;
+            streakIncreased = true;
           } else {
             // Last update was before yesterday, reset streak
-            await _firestore.collection('users').doc(userId).update({
-              'currentStreak': 1, // Reset to 1 for today
-              'lastStreakUpdate': FieldValue.serverTimestamp(),
-            });
+            newStreak = 1; // Reset to 1 for today
+            streakIncreased = false;
           }
         } else if (lastUpdateDay.isAtSameMomentAs(today)) {
           // Already updated streak today, don't increment again
-          // But can update timestamp to keep it current
-          await _firestore.collection('users').doc(userId).update({
-            'lastStreakUpdate': FieldValue.serverTimestamp(),
-          });
+          newStreak = currentStreak;
+          streakIncreased = false;
         }
+      }
+
+      // Update the streak in Firestore
+      await _firestore.collection('users').doc(userId).update({
+        'currentStreak': newStreak,
+        'lastStreakUpdate': FieldValue.serverTimestamp(),
+      });
+
+      // Check for consistency badges if streak increased
+      if (streakIncreased) {
+        await _rewardsService.checkConsistencyBadges(userId, newStreak);
       }
 
       // Show streak update notification

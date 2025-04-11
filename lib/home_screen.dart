@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import 'dart:math';
 import 'study_room_screen.dart';
 import 'profile_screen.dart';
@@ -12,6 +13,10 @@ import 'theme_provider.dart';
 import 'task_list_screen.dart';
 import 'daily_study_goals_screen.dart';
 import 'flashcards_screen.dart';
+import 'leaderboard_screen.dart';
+import 'ai_flashcard_generator_screen.dart';
+import 'smart_study_suggestions_screen.dart';
+import 'mood_based_recommendations_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -23,12 +28,17 @@ class _HomeScreenState extends State<HomeScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Stream for study rooms
+  // Stream for study rooms and user data
   late Stream<QuerySnapshot> _studyRoomsStream;
+  late Stream<DocumentSnapshot> _userDataStream;
 
-  // User stats
+  // User stats and data
   Map<String, dynamic> _userStats = {};
+  Map<String, dynamic> _userData = {};
   bool _isLoadingStats = true;
+
+  // Subscription for user data stream
+  StreamSubscription<DocumentSnapshot>? _userDataSubscription;
 
   @override
   void initState() {
@@ -40,8 +50,37 @@ class _HomeScreenState extends State<HomeScreen> {
             .orderBy('createdAt', descending: true)
             .snapshots();
 
+    // Set up user data stream
+    _setupUserDataStream();
+
     // Load user stats
     _loadUserStats();
+  }
+
+  // Set up stream for user data
+  void _setupUserDataStream() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      // Create a stream for the user's document
+      _userDataStream =
+          _firestore.collection('users').doc(user.uid).snapshots();
+
+      // Subscribe to the stream to update UI when data changes
+      _userDataSubscription = _userDataStream.listen((documentSnapshot) {
+        if (documentSnapshot.exists) {
+          setState(() {
+            _userData = documentSnapshot.data() as Map<String, dynamic>;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // Cancel the subscription when the widget is disposed
+    _userDataSubscription?.cancel();
+    super.dispose();
   }
 
   // Load user statistics from Firestore with updated metrics tracking
@@ -785,6 +824,75 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          ListTile(
+            leading: Icon(Icons.leaderboard, color: Colors.orangeAccent),
+            title: Text('Leaderboard'),
+            subtitle: Text('See top students and your ranking'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              // Navigate to the Leaderboard screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => LeaderboardScreen()),
+              );
+            },
+          ),
+          Divider(),
+          // AI Features section
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              "AI FEATURES",
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.auto_awesome, color: Colors.green),
+            title: Text('AI Flashcard Generator'),
+            subtitle: Text('Create flashcards from text automatically'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AIFlashcardGeneratorScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.psychology, color: Colors.blue),
+            title: Text('Smart Study Suggestions'),
+            subtitle: Text('Get AI-powered optimal study time recommendations'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SmartStudySuggestionsScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.mood, color: Colors.purple),
+            title: Text('Mood-Based Study Tips'),
+            subtitle: Text('Get study recommendations based on how you feel'),
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MoodBasedRecommendationsScreen(),
+                ),
+              );
+            },
+          ),
           Divider(),
           ListTile(
             leading: Icon(Icons.person, color: Colors.orangeAccent),
@@ -849,41 +957,6 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
-          // Tasks button
-          IconButton(
-            icon: Icon(Icons.task_alt),
-            tooltip: "Tasks & Progress",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TaskListScreen()),
-              );
-            },
-          ),
-          // Goals button
-          IconButton(
-            icon: Icon(Icons.flag),
-            tooltip: "Daily Study Goals",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DailyStudyGoalsScreen(),
-                ),
-              );
-            },
-          ),
-          // Flashcards button
-          IconButton(
-            icon: Icon(Icons.style),
-            tooltip: "Virtual Flashcards",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FlashcardsScreen()),
-              );
-            },
-          ),
           // Settings button
           IconButton(
             icon: Icon(Icons.settings),
@@ -907,7 +980,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Welcome back, ${_auth.currentUser?.email?.split('@')[0] ?? 'Student'}!",
+                  "Welcome back, ${_userData['name'] ?? 'Student'}!",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -931,6 +1004,8 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16.0),
             child: _buildStatsDashboard(),
           ),
+
+          SizedBox(height: 16),
 
           // Study rooms header with join by code option
           Padding(
