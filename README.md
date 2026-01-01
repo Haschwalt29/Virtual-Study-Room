@@ -1,133 +1,126 @@
-```markdown
-# Virtual Study Room
+# Virtual Study App
 
-[![Flutter](https://img.shields.io/badge/Framework-Flutter-blue.svg)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Language-Dart-0175C2.svg)](https://dart.dev)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](./LICENSE)
+A modern virtual study platform designed to help students focus, collaborate, and learn efficiently in a structured digital environment.  
+The application combines productivity tools, real-time interaction, and intelligent features to simulate an effective study ecosystem.
 
-Professional, feature-rich Flutter app that helps students collaborate, study, and gamify learning in a virtual classroom environment.
+---
 
-## Project Snapshot
+## 🚀 Features
 
-- Platform: Flutter (mobile, web, desktop directories present)
-- Real-time collaboration: audio/video and shared whiteboard/notes
-- Productivity features: Pomodoro timer, task lists, flashcards, goals
-- Social features: Leaderboards, profiles, rewards
+- 📚 **Structured Study Environment** – Designed to reduce distractions and promote deep focus  
+- ⏱️ **Study Sessions & Timers** – Pomodoro-style or custom study sessions  
+- 👥 **Virtual Collaboration** – Study together with peers in shared virtual rooms  
+- 💬 **Real-time Interaction** – Chat and live updates using real-time communication  
+- 📊 **Progress Tracking** – Track study time, consistency, and productivity trends  
+- 🧠 **Smart Assistance (Optional/Planned)** – Personalized suggestions based on study behavior  
 
-## Key Features
+---
 
-- Create and join virtual study rooms
-- Real-time shared whiteboard and collaborative notes
-- AI-powered flashcard generation and smart study suggestions
-- Pomodoro timer and daily study goals
-- Avatar customization and rewards system
-- Authentication and user profiles (Firebase-ready)
+## 🛠️ Tech Stack
 
-## Tech Stack & Integrations
+### Frontend
+- React.js  
+- Context API / State Management  
+- CSS / TailwindCSS (if applicable)
 
-- Flutter (Dart)
-- Firebase (auth, analytics, remote config — `firebase_options.dart` included)
-- 100ms (presence of `100ms_web.html` suggests web RTC / conferencing integration)
-- Platform targets: Android, iOS, Web, Windows, macOS, Linux
+### Backend
+- Node.js  
+- Express.js  
+- RESTful APIs  
 
-## Screens / Notable Modules
+### Database
+- MongoDB / PostgreSQL (replace based on your stack)
 
-The `lib/` folder contains the main app and screens including:
-- `home_screen.dart`, `study_room_screen.dart`, `flashcards_screen.dart`, `flashcard_quiz_screen.dart`
-- Productivity: `pomodoro_timer_screen.dart`, `daily_study_goals_screen.dart`, `task_list_screen.dart`
-- Social & UX: `profile_screen.dart`, `leaderboard_screen.dart`, `avatar_customization_screen.dart`
-- Services: `lib/services/` contains `ai_service.dart`, `avatar_service.dart`, `rewards_service.dart`, `shared_notes_service.dart`, `whiteboard_service.dart`
+### Other Tools & Services
+- WebSockets / Socket.IO for real-time features  
+- JWT-based Authentication  
+- GitHub Actions for CI/CD (optional)  
 
-## Getting Started (for recruiters / evaluators)
+---
 
-Prerequisites
-- Flutter SDK (stable channel, tested on Flutter 3.x+)
-- Dart
-- Platform toolchains for Android/iOS if testing on devices/emulators
+## 📐 System Architecture
 
-Quick local run
+- Client-server architecture  
+- Secure authentication flow using JWT  
+- Real-time communication layer for live study sessions  
+- Modular and scalable backend design  
 
-1. Clone the repository
+---
 
+## 🔐 Authentication & Security
+
+- Secure login and signup  
+- Password hashing  
+- Token-based authentication  
+- Protected API routes  
+
+---
+
+## 📦 Installation & Setup
+
+### Prerequisites
+- Node.js (v16+ recommended)
+- npm or yarn
+- Git
+
+### Clone the Repository
 ```bash
-git clone https://github.com/Haschwalt29/Virtual-Study-Room.git
-cd Virtual-Study-Room
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+Backend Setup
+bash
+Copy code
+cd backend
+npm install
+npm run dev
+Frontend Setup
+bash
+Copy code
+cd frontend
+npm install
+npm start
+⚙️ Environment Variables
+Create a .env file in the backend directory and configure the following:
+
+env
+Copy code
+PORT=5000
+DATABASE_URL=your_database_url
+JWT_SECRET=your_secret_key
 ```
 
-2. Install dependencies
+## 📈 Future Enhancements
+AI-powered study recommendations
 
-```bash
-flutter pub get
-```
+Focus analytics dashboard
 
-3. (Optional) Add Firebase configuration for Android/iOS/web if you want full backend functionality. Example files are expected in `android/app/` and `ios/Runner/`.
+Calendar and task integration
 
-4. Run the app
+Voice/video study rooms
 
-```bash
-flutter run
-# or for web
-flutter run -d chrome
-```
+Mobile application
 
-Run tests
+## 🤝 Contributing
+Contributions are welcome!
 
-```bash
-flutter test
-```
+Fork the repository
 
-## Project Structure (high level)
+Create a new branch
 
-- `lib/` — core app code and UI
-- `lib/services/` — business logic and integrations (AI, whiteboard, shared notes)
-- `assets/` — images, web integration files (e.g., `100ms_web.html`)
-- `android/`, `ios/`, `web/`, `windows/`, `macos/`, `linux/` — platform-specific code
+Commit your changes
 
-## Architecture & Design Notes
+Open a pull request
 
-- UI is organized by screens under `lib/` and re-usable widgets under `lib/widgets/`.
-- Backend integrations are abstracted in `lib/services/` to keep UI code clean and testable.
-- The app includes Firebase configuration scaffolding (`firebase_options.dart`) so it can be connected to a real backend quickly.
+## 📄 License
+This project is licensed under the MIT License.
 
-## How to Evaluate (quick checklist for recruiters)
+## 👤 Author
+Aditya Rane
+B.Tech Student | Full-Stack Developer
+Passionate about building impactful educational and productivity tools
 
-- Launch the app on an emulator or device with `flutter run`.
-- Inspect `lib/services/` for integration patterns and separation of concerns.
-- Review `lib/widgets/` for reusable UI components and consistent theming (`theme_provider.dart`).
-- Run `flutter analyze` and `flutter test` to review static analysis and unit/widget tests.
+## ⭐ Acknowledgements
+Open-source libraries and tools used in the project
 
-## Contribution & Extensibility
+Community feedback and peer testing
 
-This project is structured to be extensible. To contribute:
-
-- Fork the repo, create a feature branch, add tests, and open a pull request.
-- Keep changes focused and add documentation for new features.
-
-## Contact
-
-Replace with your contact details in the project before sharing with recruiters:
-
-- Name: Your Name
-- Email: your.email@example.com
-- GitHub: https://github.com/Haschwalt29
-
-## License
-
-This repository is provided under the MIT License. See `LICENSE` for details.
-
-```# study_room
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
